@@ -1,0 +1,1283 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ nombre_empresa }} — Alta de Cliente Nuevo</title>
+    <!-- Libreria html2pdf para generar el PDF visual en el lado del cliente -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+
+        :root {
+            --red-primary: #C41230;
+            --red-dark: #9E0E27;
+            --gray-dark: #3D4249;
+            --gray-medium: #6B7280;
+            --gray-light: #E5E7EB;
+            --gray-lighter: #F3F4F6;
+            --white: #FFFFFF;
+            --black: #111827;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            font-size: 10pt;
+            color: var(--black);
+            background: var(--gray-lighter);
+            line-height: 1.4;
+        }
+
+        /* ============ PRINT STYLES ============ */
+        @media print {
+            body {
+                font-size: 9pt;
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+                background: white;
+            }
+
+            .page-break {
+                page-break-before: always;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .container {
+                padding: 0;
+                max-width: 100%;
+                box-shadow: none;
+            }
+
+            .section {
+                break-inside: avoid;
+                margin-bottom: 12px;
+            }
+
+            .header-bar {
+                padding: 15px 20px !important;
+            }
+        }
+
+        /* Ocultar elementos cuando se hace el render final a pdf */
+        body.generating-pdf .no-print,
+        body.generating-pdf .top-bar,
+        body.generating-pdf .submit-area {
+            display: none !important;
+        }
+
+        /* Evitar que html2canvas recorte imágenes largas */
+        body.generating-pdf {
+            height: auto !important;
+        }
+
+        body.generating-pdf .container {
+            overflow: visible !important;
+            height: auto !important;
+            box-shadow: none !important;
+            margin: 0 auto !important;
+        }
+
+        body.generating-pdf .section {
+            overflow: visible !important;
+        }
+
+        /* ============ TOP BAR ============ */
+        .top-bar {
+            background: linear-gradient(135deg, var(--gray-dark), #2D3239);
+            color: white;
+            padding: 12px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            font-size: 13px;
+        }
+
+        .top-bar button {
+            background: var(--red-primary);
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 6px;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 13px;
+            transition: background 0.2s;
+        }
+
+        .top-bar button:hover {
+            background: var(--red-dark);
+        }
+
+        /* ============ CONTAINER ============ */
+        .container {
+            max-width: 860px;
+            margin: 28px auto;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 4px 32px rgba(0, 0, 0, 0.10);
+            overflow: hidden;
+        }
+
+        /* ============ HEADER ============ */
+        .header-bar {
+            background: linear-gradient(135deg, var(--red-primary) 0%, var(--red-dark) 100%);
+            color: white;
+            padding: 24px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 18px;
+        }
+
+        .logo-container {
+            width: 80px;
+            height: 80px;
+            background: white;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+        }
+
+        .logo-container img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+
+        .header-title h1 {
+            font-size: 20pt;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+            margin-bottom: 2px;
+        }
+
+        .header-title p {
+            font-size: 10pt;
+            opacity: 0.9;
+            font-weight: 400;
+        }
+
+        .header-right {
+            text-align: right;
+            font-size: 8.5pt;
+            opacity: 0.85;
+        }
+
+        .header-right strong {
+            font-size: 9pt;
+            opacity: 1;
+        }
+
+        .confidential-tag {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 7pt;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            display: inline-block;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }
+
+        /* ============ SUB HEADER ============ */
+        .sub-header {
+            background: var(--gray-dark);
+            color: white;
+            padding: 12px 32px;
+            font-size: 8.5pt;
+            display: flex;
+            justify-content: space-between;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .sub-header .field-inline {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .sub-header .field-inline label {
+            font-weight: 600;
+            opacity: 0.8;
+            white-space: nowrap;
+        }
+
+        .sub-header input[type="text"].sub-input {
+            background: transparent;
+            border: none;
+            border-bottom: 1px dashed rgba(255, 255, 255, 0.5);
+            color: white;
+            font-family: inherit;
+            font-size: 8.5pt;
+            padding: 2px 4px;
+            min-width: 120px;
+            outline: none;
+        }
+
+        .sub-header input[type="text"].sub-input::placeholder {
+            color: rgba(255, 255, 255, 0.4);
+        }
+
+        .sub-header input[type="text"].sub-input:focus {
+            border-bottom-color: white;
+        }
+
+        /* ============ FORM BODY ============ */
+        .form-body {
+            padding: 24px 32px 32px;
+        }
+
+        /* ============ SECTIONS ============ */
+        .section {
+            margin-bottom: 20px;
+            border: 1px solid var(--gray-light);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .section-header {
+            background: linear-gradient(135deg, var(--gray-dark), #4A5058);
+            color: white;
+            padding: 10px 18px;
+            font-weight: 700;
+            font-size: 10pt;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .section-body {
+            padding: 16px 18px;
+            background: var(--white);
+        }
+
+        /* ============ FORM FIELDS ============ */
+        .field-row {
+            display: flex;
+            gap: 16px;
+            margin-bottom: 12px;
+            flex-wrap: wrap;
+        }
+
+        .field-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .field {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .field.full {
+            flex: 1 1 100%;
+        }
+
+        .field label {
+            display: block;
+            font-size: 7.5pt;
+            font-weight: 700;
+            color: var(--gray-medium);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 4px;
+        }
+
+        .field input[type="text"],
+        .field input[type="email"],
+        .field input[type="tel"],
+        .field input[type="number"],
+        .field textarea {
+            width: 100%;
+            border: 1.5px solid var(--gray-light);
+            border-radius: 6px;
+            padding: 7px 10px;
+            font-family: inherit;
+            font-size: 9.5pt;
+            color: var(--black);
+            background: #FAFAFA;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            outline: none;
+        }
+
+        .field input:focus,
+        .field textarea:focus {
+            border-color: var(--red-primary);
+            box-shadow: 0 0 0 3px rgba(196, 18, 48, 0.08);
+            background: white;
+        }
+
+        .field textarea {
+            resize: vertical;
+            min-height: 52px;
+        }
+
+        /* ============ QUESTION ROWS ============ */
+        .question-row {
+            display: flex;
+            align-items: flex-start;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--gray-lighter);
+            gap: 12px;
+        }
+
+        .question-row:last-child {
+            border-bottom: none;
+        }
+
+        .question-number {
+            background: var(--red-primary);
+            color: white;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8pt;
+            font-weight: 700;
+            flex-shrink: 0;
+            margin-top: 1px;
+        }
+
+        .question-content {
+            flex: 1;
+        }
+
+        .question-text {
+            font-weight: 600;
+            font-size: 9.5pt;
+            color: var(--black);
+            margin-bottom: 8px;
+        }
+
+        .question-answer {
+            margin-top: 6px;
+        }
+
+        .sub-label {
+            font-size: 8pt;
+            color: var(--gray-medium);
+            margin-bottom: 4px;
+        }
+
+        /* ============ RADIO / CHECKBOX GROUPS ============ */
+        .options-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            padding: 2px 0;
+        }
+
+        .option-label {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 9.5pt;
+            cursor: pointer;
+            padding: 6px 12px;
+            border: 1.5px solid var(--gray-light);
+            border-radius: 6px;
+            transition: all 0.15s;
+            user-select: none;
+            background: #FAFAFA;
+        }
+
+        .option-label:hover {
+            border-color: var(--red-primary);
+            background: #FFF5F6;
+        }
+
+        .option-label input[type="radio"],
+        .option-label input[type="checkbox"] {
+            accent-color: var(--red-primary);
+            width: 15px;
+            height: 15px;
+            cursor: pointer;
+        }
+
+        .option-label input:checked+span {
+            color: var(--red-primary);
+            font-weight: 600;
+        }
+
+        .option-label:has(input:checked) {
+            border-color: var(--red-primary);
+            background: #FFF5F6;
+        }
+
+        /* ============ NOTE BOX ============ */
+        .note-box {
+            background: #FFF7ED;
+            border-left: 4px solid #F59E0B;
+            padding: 10px 14px;
+            font-size: 8.5pt;
+            margin-bottom: 12px;
+            border-radius: 0 4px 4px 0;
+        }
+
+        .note-box strong {
+            color: #D97706;
+        }
+
+        /* ============ SUBMIT BUTTON ============ */
+        .submit-area {
+            margin-top: 24px;
+            display: flex;
+            justify-content: center;
+        }
+
+        .btn-submit {
+            background: linear-gradient(135deg, var(--red-primary), var(--red-dark));
+            color: white;
+            border: none;
+            padding: 14px 48px;
+            border-radius: 8px;
+            font-family: inherit;
+            font-size: 13pt;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 0.5px;
+            box-shadow: 0 4px 16px rgba(196, 18, 48, 0.25);
+            transition: all 0.2s;
+        }
+
+        .btn-submit:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 6px 20px rgba(196, 18, 48, 0.35);
+        }
+
+        .btn-submit:active {
+            transform: translateY(0);
+        }
+
+        /* ============ DECLARACIÓN ============ */
+        .declaracion {
+            background: var(--gray-lighter);
+            padding: 12px 16px;
+            border-radius: 6px;
+            font-size: 8pt;
+            color: var(--gray-medium);
+            margin-top: 20px;
+            border-left: 3px solid var(--red-primary);
+        }
+
+        .declaracion strong {
+            color: var(--black);
+        }
+
+        /* ============ FOOTER ============ */
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            padding-top: 12px;
+            border-top: 2px solid var(--red-primary);
+            font-size: 7.5pt;
+            color: var(--gray-medium);
+        }
+
+        .footer strong {
+            color: var(--red-primary);
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Top Bar (no aparece al imprimir) -->
+    <div class="top-bar no-print">
+        📄 También puedes imprimir este formulario: <strong>Ctrl + P</strong> → "Guardar como PDF"
+        <button type="button" onclick="window.print()">🖨️ Imprimir / PDF</button>
+    </div>
+
+    <div class="container">
+        <form method="POST" action="/formulario-cliente" autocomplete="on">
+
+            <!-- ============ HEADER ============ -->
+            <div class="header-bar">
+                <div class="header-left">
+                    <div class="logo-container">
+                        <img src="/static/logo_infinitybox.png" alt="{{ nombre_empresa }} Logo"
+                            onerror="this.parentElement.innerHTML='<div style=&quot;font-weight:800;color:#C41230;font-size:10pt;text-align:center;line-height:1.1&quot;>{{ nombre_empresa }}</div>'">
+                    </div>
+                    <div class="header-title">
+                        <h1>Alta de Cliente Nuevo</h1>
+                        <p>Formulario de Registro Comercial</p>
+                    </div>
+                </div>
+                <div class="header-right">
+                    <span class="confidential-tag">Confidencial</span><br><br>
+                    <strong>{{ nombre_empresa }}</strong><br>
+                    Fábrica de Cajas de Cartón Corrugado
+                </div>
+            </div>
+
+            <!-- ============ SUB HEADER ============ -->
+            <div class="sub-header">
+
+                <div class="field-inline">
+                    <label>Nº Registro:</label>
+                    <input type="text" name="numero_registro" class="sub-input" placeholder="Ej: 2026-001"
+                        style="min-width:90px">
+                </div>
+            </div>
+
+            <!-- ============ FORM BODY ============ -->
+            <div class="form-body">
+
+                <!-- SECCIÓN 1: DATOS EMPRESA -->
+                <div class="section">
+                    <div class="section-header"><span>🏢</span> 1. Datos de la Empresa</div>
+                    <div class="section-body">
+                        <div class="field-row">
+                            <div class="field full">
+                                <label>Responsable de completar formulario *</label>
+                                <input type="text" name="responsable_formulario" required
+                                    placeholder="Nombre completo de quien llena este formulario">
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field" style="flex:2">
+                                <label>Razón Social *</label>
+                                <input type="text" name="razon_social" required
+                                    placeholder="Nombre legal de la empresa">
+                            </div>
+                            <div class="field">
+                                <label>RUT *</label>
+                                <input type="text" name="rut" required placeholder="12.345.678-9">
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field full">
+                                <label>Giro Comercial *</label>
+                                <input type="text" name="giro" required placeholder="Actividad principal de la empresa">
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field full">
+                                <label>Dirección Legal *</label>
+                                <input type="text" name="direccion_legal" required
+                                    placeholder="Dirección tributaria registrada">
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field full">
+                                <label>Dirección de Despacho *</label>
+                                <input type="text" name="direccion_despacho" required
+                                    placeholder="Dirección donde se entregarán los pedidos">
+                            </div>
+                        </div>
+                        <div class="field-row">
+                            <div class="field full">
+                                <label>Horario de Recepción / Despacho *</label>
+                                <input type="text" name="horario_recepcion" required
+                                    placeholder="Ej: Lunes a Viernes 08:00 – 17:00">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 2: CONDICIONES DE DESPACHO -->
+                <div class="section">
+                    <div class="section-header"><span>🚚</span> 2. Condiciones de Despacho</div>
+                    <div class="section-body">
+
+                        <div class="question-row">
+                            <div class="question-number">1</div>
+                            <div class="question-content">
+                                <div class="question-text">¿Hay que enrolar a los choferes para el despacho? *</div>
+                                <div class="options-group">
+                                    <label class="option-label"><input type="radio" name="enrolar_choferes"
+                                            id="enrolar_si" value="Sí" required><span>Sí</span></label>
+                                    <label class="option-label"><input type="radio" name="enrolar_choferes"
+                                            id="enrolar_no" value="No"><span>No</span></label>
+                                </div>
+                                <div class="question-answer">
+                                    <div class="sub-label">Si es sí, detallar proceso:</div>
+                                    <div class="field"><input type="text" name="detalle_enrolar" id="detalle_enrolar"
+                                            placeholder="Proceso de enrolamiento..."></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="question-row">
+                            <div class="question-number">2</div>
+                            <div class="question-content">
+                                <div class="question-text">¿Los choferes deben ingresar con alguna aplicación? *</div>
+                                <div class="options-group">
+                                    <label class="option-label"><input type="radio" name="app_choferes" id="app_si"
+                                            value="Sí" required><span>Sí</span></label>
+                                    <label class="option-label"><input type="radio" name="app_choferes" id="app_no"
+                                            value="No"><span>No</span></label>
+                                </div>
+                                <div class="question-answer">
+                                    <div class="sub-label">Nombre de la aplicación / detalles:</div>
+                                    <div class="field"><input type="text" name="detalle_app" id="detalle_app"
+                                            placeholder="Nombre y descripción de la app..."></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="question-row">
+                            <div class="question-number">3</div>
+                            <div class="question-content">
+                                <div class="question-text">¿Los choferes deben usar EPP (Elementos de Protección
+                                    Personal)? *</div>
+                                <div class="options-group">
+                                    <label class="option-label"><input type="radio" name="epp_choferes" id="epp_si"
+                                            value="Sí" required><span>Sí</span></label>
+                                    <label class="option-label"><input type="radio" name="epp_choferes" id="epp_no"
+                                            value="No"><span>No</span></label>
+                                </div>
+                                <div class="question-answer">
+                                    <div class="sub-label">Detallar EPP requeridos:</div>
+                                    <div class="field"><input type="text" name="detalle_epp" id="detalle_epp"
+                                            placeholder="Casco, chaleco, zapatos de seguridad, etc."></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="question-row">
+                            <div class="question-number">4</div>
+                            <div class="question-content">
+                                <div class="question-text">¿El despacho se puede realizar con camión descubierto o debe
+                                    ir encarpado? *</div>
+                                <div class="options-group">
+                                    <label class="option-label"><input type="radio" name="tipo_camion" required
+                                            value="Descubierto (OK)"><span>Camión descubierto (OK)</span></label>
+                                    <label class="option-label"><input type="radio" name="tipo_camion"
+                                            value="Debe ir encarpado"><span>Debe ir encarpado</span></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="question-row">
+                            <div class="question-number">5</div>
+                            <div class="question-content">
+                                <div class="question-text">¿Requiere agendamiento previo de descarga? *</div>
+                                <div class="options-group">
+                                    <label class="option-label"><input type="radio" name="agendamiento" id="agend_si"
+                                            value="Sí" required><span>Sí</span></label>
+                                    <label class="option-label"><input type="radio" name="agendamiento" id="agend_no"
+                                            value="No"><span>No</span></label>
+                                </div>
+                                <div class="question-answer">
+                                    <div class="sub-label">Detallar proceso de agendamiento:</div>
+                                    <div class="field"><input type="text" name="detalle_agendamiento"
+                                            id="detalle_agendamiento"
+                                            placeholder="¿Cómo se agenda? Portal, teléfono, email..."></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="question-row">
+                            <div class="question-number">6</div>
+                            <div class="question-content">
+                                <div class="question-text">Contacto de Bodega *</div>
+                                <div class="field-row" style="margin-top:8px">
+                                    <div class="field">
+                                        <label>Nombre *</label>
+                                        <input type="text" name="contacto_bodega_nombre" required
+                                            placeholder="Nombre contacto bodega">
+                                    </div>
+                                    <div class="field">
+                                        <label>Teléfono *</label>
+                                        <input type="tel" name="contacto_bodega_tel" required
+                                            placeholder="+56 9 1234 5678">
+                                    </div>
+                                    <div class="field">
+                                        <label>Email *</label>
+                                        <input type="email" name="contacto_bodega_email" required
+                                            placeholder="bodega@empresa.cl">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 3: DESCARGA Y PALLETS -->
+                <div class="section">
+                    <div class="section-header"><span>📦</span> 3. Descarga y Especificaciones de Pallet</div>
+                    <div class="section-body">
+
+                        <div class="question-row">
+                            <div class="question-number">7</div>
+                            <div class="question-content">
+                                <div class="question-text">Método de descarga del camión: *</div>
+                                <div class="options-group">
+                                    <label class="option-label"><input type="radio" name="metodo_descarga" required
+                                            value="Yale (grúa horquilla)"><span>Yale (grúa horquilla)</span></label>
+                                    <label class="option-label"><input type="radio" name="metodo_descarga"
+                                            value="Traspaleta manual"><span>Traspaleta manual</span></label>
+                                    <label class="option-label"><input type="radio" name="metodo_descarga"
+                                            value="Trasvasijar a otro pallet"><span>Trasvasijar a otro
+                                            pallet</span></label>
+                                </div>
+                                <div class="question-answer">
+                                    <div class="sub-label">Observaciones:</div>
+                                    <div class="field"><input type="text" name="obs_descarga"
+                                            placeholder="Detalles adicionales de descarga..."></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="question-row">
+                            <div class="question-number">8</div>
+                            <div class="question-content">
+                                <div class="question-text">¿Altura máxima que puede ir el pallet? (desde el piso) *
+                                </div>
+                                <div style="max-width:200px; margin-top:8px">
+                                    <div class="field">
+                                        <label>Altura máxima (metros) *</label>
+                                        <input type="number" name="altura_pallet" required placeholder="Ej: 2.5"
+                                            step="0.1" min="0" max="10">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="question-row">
+                            <div class="question-number">9</div>
+                            <div class="question-content">
+                                <div class="question-text">¿Aceptan pallets de 1 × 1.2 metros? *</div>
+                                <div class="options-group">
+                                    <label class="option-label"><input type="radio" name="acepta_pallet_estandar"
+                                            id="pallet_si" value="Sí" required><span>Sí</span></label>
+                                    <label class="option-label"><input type="radio" name="acepta_pallet_estandar"
+                                            id="pallet_no" value="No"><span>No</span></label>
+                                </div>
+                                <div class="question-answer">
+                                    <div class="sub-label">Si no, indicar medida requerida:</div>
+                                    <div class="field"><input type="text" name="medida_pallet_alternativa"
+                                            id="medida_pallet_alternativa" placeholder="Ej: 0.8 × 1.0 metros"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="question-row">
+                            <div class="question-number">10</div>
+                            <div class="question-content">
+                                <div class="question-text">¿Aceptan cajas paradas en el pallet? *</div>
+                                <div class="options-group">
+                                    <label class="option-label"><input type="radio" name="cajas_paradas" required
+                                            value="Sí"><span>Sí</span></label>
+                                    <label class="option-label"><input type="radio" name="cajas_paradas"
+                                            value="No, solo acostadas"><span>No, solo acostadas</span></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="question-row">
+                            <div class="question-number">11</div>
+                            <div class="question-content">
+                                <div class="question-text">Requisitos de rotulación del pallet: *</div>
+                                <div class="options-group">
+                                    <label class="option-label"><input type="radio" name="rotulacion"
+                                            id="rotulacion_tarja" value="Tarja {{ nombre_empresa }} es suficiente"
+                                            required><span>Tarja {{ nombre_empresa }} es suficiente</span></label>
+                                    <label class="option-label"><input type="radio" name="rotulacion"
+                                            id="rotulacion_propia"
+                                            value="Requiere tarja propia del cliente"><span>Requiere tarja / etiqueta
+                                            propia del cliente</span></label>
+                                </div>
+                                <div class="question-answer">
+                                    <div class="sub-label">Si requiere tarja propia, detallar formato y datos
+                                        requeridos:</div>
+                                    <div class="field"><textarea name="detalle_rotulacion" id="detalle_rotulacion"
+                                            placeholder="Datos que deben aparecer en la tarja, formato, tamaño..."></textarea>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- PAGE BREAK -->
+                <div class="page-break"></div>
+
+                <!-- SECCIÓN 4: TOLERANCIAS Y FACTURACIÓN -->
+                <div class="section">
+                    <div class="section-header"><span>📋</span> 4. Tolerancias de Entrega y Facturación</div>
+                    <div class="section-body">
+
+                        <div class="note-box">
+                            <strong>⚠️ Nota:</strong> En cada entrega de cajas, podemos despachar hasta un
+                            <strong>±10%</strong>
+                            de la cantidad solicitada según la orden de compra, debido a las características propias del
+                            proceso
+                            de fabricación de cartón corrugado.
+                        </div>
+
+                        <div class="question-row">
+                            <div class="question-number">12</div>
+                            <div class="question-content">
+                                <div class="question-text">¿Acepta la tolerancia de ±10% sobre la cantidad solicitada? *
+                                </div>
+                                <div class="options-group">
+                                    <label class="option-label"><input type="radio" name="tolerancia" required
+                                            value="Acepto 10% más"><span>Acepto 10% más</span></label>
+                                    <label class="option-label"><input type="radio" name="tolerancia"
+                                            value="Acepto 10% menos"><span>Acepto 10% menos</span></label>
+                                    <label class="option-label"><input type="radio" name="tolerancia"
+                                            value="Acepto ambas (±10%)"><span>Acepto ambas (±10%)</span></label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="question-row">
+                            <div class="question-number">13</div>
+                            <div class="question-content">
+                                <div class="question-text">En caso de entregar un 10% más, ¿cómo se envía el excedente?
+                                    *</div>
+                                <div class="options-group" style="flex-direction:column;align-items:flex-start;gap:6px">
+                                    <label class="option-label" style="width:100%"><input type="radio"
+                                            name="facturacion_excedente" required
+                                            value="Con factura y OC nueva"><span>Con factura y OC nueva</span></label>
+                                    <label class="option-label" style="width:100%"><input type="radio"
+                                            name="facturacion_excedente"
+                                            value="Se realizará una factura por el pedido total"><span>Se realizará una
+                                            factura por el pedido total</span></label>
+                                    <label class="option-label" style="width:100%"><input type="radio"
+                                            name="facturacion_excedente" id="excedente_otra"
+                                            value="Constituye venta a la espera de la OC para facturar"><span>Que
+                                            constituye venta a la espera de la OC para facturar</span></label>
+                                </div>
+                                <div class="question-answer" style="margin-top:10px">
+                                    <div class="sub-label">Si no se ajusta a ninguna alternativa detallar:</div>
+                                    <div class="field"><input type="text" name="detalle_excedente"
+                                            id="detalle_excedente" placeholder="Detallar proceso para el excedente...">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+
+                <!-- SECCIÓN 5: COBRANZA Y PAGOS -->
+                <div class="section">
+                    <div class="section-header"><span>💰</span> 5. Cobranza y Condiciones de Pago</div>
+                    <div class="section-body">
+
+                        <div class="question-row">
+                            <div class="question-number">14</div>
+                            <div class="question-content">
+                                <div class="question-text">Contacto persona encargada de Cobranza / Pagos *</div>
+                                <div class="field-row" style="margin-top:8px">
+                                    <div class="field">
+                                        <label>Nombre completo *</label>
+                                        <input type="text" name="contacto_cobranza_nombre" required
+                                            placeholder="Nombre">
+                                    </div>
+                                    <div class="field">
+                                        <label>Cargo *</label>
+                                        <input type="text" name="contacto_cobranza_cargo" required placeholder="Cargo">
+                                    </div>
+                                </div>
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label>Teléfono *</label>
+                                        <input type="tel" name="contacto_cobranza_tel" required
+                                            placeholder="+56 9 1234 5678">
+                                    </div>
+                                    <div class="field">
+                                        <label>Email *</label>
+                                        <input type="email" name="contacto_cobranza_email" required
+                                            placeholder="pagos@empresa.cl">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="question-row">
+                            <div class="question-number">15</div>
+                            <div class="question-content">
+                                <div class="question-text">En caso de aplicar como cliente de crédito, ¿qué fechas de
+                                    cada mes realizan los pagos?</div>
+                                <div class="field" style="max-width:260px;margin-top:8px">
+                                    <label>Fecha(s) de pago mensual</label>
+                                    <input type="text" name="fechas_pago" placeholder="Ej: Día 5 y 20 de cada mes">
+                                </div>
+                                <div style="margin-top:8px">
+                                    <div class="sub-label">Condición de pago *</div>
+                                    <div class="options-group">
+                                        <label class="option-label"><input type="radio" name="condicion_pago" required
+                                                value="30 días"><span>30 días</span></label>
+                                        <label class="option-label"><input type="radio" name="condicion_pago"
+                                                value="Pago anticipado"><span>Pago anticipado</span></label>
+                                    </div>
+                                </div>
+
+                                <!-- Aviso evaluación de crédito -->
+                                <div
+                                    style="background:#FFF5F6;border-left:4px solid #C41230;padding:14px 18px;border-radius:0 6px 6px 0;margin-top:14px;font-size:9.5pt;line-height:1.6;">
+                                    <strong style="color:#C41230;font-size:10pt;">📄 Evaluación de
+                                        Crédito:</strong><br><br>
+                                    Para evaluar la solicitud de crédito a 30 días, es necesario enviar al correo
+                                    <strong><a href="mailto:{{ correo_destino }}"
+                                            style="color:#C41230;">{{ correo_destino }}</a></strong>
+                                    la <strong>carpeta tributaria (En el sistema de impuestos internos es la carpeta
+                                        para solicitar creditos)</strong> mas el <strong>último balance de la
+                                        empresa</strong>,
+                                    para que la aseguradora pueda realizar la evaluación.
+                                </div>
+                                <div class="question-content" style="margin-top:10px">
+                                    <div class="options-group">
+                                        <label class="option-label">
+                                            <input type="radio" name="conocimiento_credito" required
+                                                value="Tomo conocimiento de los requisitos de crédito">
+                                            <span>✅ Tomo conocimiento</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+
+
+                                <div class="question-row">
+                                    <div class="question-number">18</div>
+                                    <div class="question-content">
+                                        <div class="question-text">¿Se debe enviar la factura a un correo electrónico? *
+                                        </div>
+                                        <div class="options-group" style="margin-top:8px">
+                                            <label class="option-label"><input type="radio" name="factura_por_email"
+                                                    id="factura_email_si" value="Sí" required><span>Sí</span></label>
+                                            <label class="option-label"><input type="radio" name="factura_por_email"
+                                                    id="factura_email_no" value="No"><span>No</span></label>
+                                        </div>
+                                        <div class="question-answer" style="margin-top:8px">
+                                            <div class="sub-label">Indicar Email en caso de marcar "Sí":</div>
+                                            <div class="field">
+                                                <input type="text" name="email_facturacion" id="email_facturacion"
+                                                    placeholder="facturacion@empresa.cl, contabilidad@empresa.cl">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+
+
+                        <!-- SECCIÓN 7: CONTACTO COMPRAS -->
+                        <div class="section">
+                            <div class="section-header"><span>🛒</span> 7. Contacto Comercial / Compras</div>
+                            <div class="section-body">
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label>Nombre completo *</label>
+                                        <input type="text" name="contacto_compras_nombre" required
+                                            placeholder="Contacto principal">
+                                    </div>
+                                    <div class="field">
+                                        <label>Cargo *</label>
+                                        <input type="text" name="contacto_compras_cargo" required
+                                            placeholder="Cargo / rol">
+                                    </div>
+                                </div>
+                                <div class="field-row">
+                                    <div class="field">
+                                        <label>Teléfono *</label>
+                                        <input type="tel" name="contacto_compras_tel" required
+                                            placeholder="+56 9 1234 5678">
+                                    </div>
+                                    <div class="field">
+                                        <label>Email *</label>
+                                        <input type="email" name="contacto_compras_email" required
+                                            placeholder="compras@empresa.cl">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- SECCIÓN 8: OBSERVACIONES -->
+                        <div class="section">
+                            <div class="section-header"><span>📝</span> 8. Observaciones Generales</div>
+                            <div class="section-body">
+                                <div class="field">
+                                    <textarea name="obs_generales" style="min-height:80px"
+                                        placeholder="Cualquier información adicional relevante para la relación comercial..."></textarea>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- ============ CONDICIONES DE COMPRA ============ -->
+                        <div class="section" style="border-color: #C41230;">
+                            <div class="section-header" style="background: linear-gradient(135deg, #C41230, #9E0E27);">
+                                <span>📋</span> Condiciones de Compra — {{ nombre_empresa }}
+                            </div>
+                            <div class="section-body">
+
+                                <!-- Política de Pallets -->
+                                <div
+                                    style="background:#FFF5F6;border-left:4px solid #C41230;padding:14px 18px;border-radius:0 6px 6px 0;margin-bottom:12px;font-size:9.5pt;line-height:1.6;">
+                                    <strong style="color:#C41230;font-size:10pt;">🔴 Política de
+                                        Pallets:</strong><br><br>
+                                    Los pallets utilizados por <strong>{{ nombre_empresa }}</strong> para el despacho de
+                                    productos
+                                    son de
+                                    <strong>propiedad exclusiva de {{ nombre_empresa }}</strong>. En cada entrega, el cliente
+                                    deberá
+                                    <strong>devolver los pallets</strong> al momento de la recepción de la mercadería o
+                                    en el
+                                    siguiente despacho.
+                                    En caso de no devolución, se solicitará una orden de compra para facturar el costo
+                                    por
+                                    unidad de
+                                    <strong>$4.500 pesos</strong>.
+                                </div>
+                                <div class="question-content" style="margin-bottom:16px">
+                                    <div class="question-text">Política de pallets — indique su opción: *</div>
+                                    <div class="options-group" style="margin-top:8px;flex-direction:column;gap:6px">
+                                        <label class="option-label">
+                                            <input type="radio" name="politica_pallets_opcion" required
+                                                value="Acepto devolver los pallets">
+                                            <span>🔄 Acepto devolver los pallets</span>
+                                        </label>
+                                        <label class="option-label">
+                                            <input type="radio" name="politica_pallets_opcion"
+                                                value="Acepto que facturen los pallets ($4.500 por unidad)">
+                                            <span>🧳 Acepto que facturen los pallets ($4.500 por unidad)</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                                <!-- No devoluciones -->
+                                <div
+                                    style="background:#FFF5F6;border-left:4px solid #C41230;padding:14px 18px;border-radius:0 6px 6px 0;margin-bottom:16px;font-size:9.5pt;line-height:1.6;">
+                                    <strong style="color:#C41230;font-size:10pt;">🚫 Política de
+                                        Compra:</strong><br><br>
+                                    Una vez recepcionada la orden de compra, <strong>no se aceptan Anulaciones</strong>.
+                                </div>
+
+                                <!-- Urgencias -->
+                                <div
+                                    style="background:#FFF5F6;border-left:4px solid #C41230;padding:14px 18px;border-radius:0 6px 6px 0;margin-bottom:16px;font-size:9.5pt;line-height:1.6;">
+                                    <strong style="color:#C41230;font-size:10pt;">⚡ Política de
+                                        Urgencias:</strong><br><br>
+                                    Todas las urgencias o solicitudes de adelanto de entregas tienen un <strong>recargo
+                                        del
+                                        15%</strong> sobre el precio de la caja.
+                                    Las entregas urgentes son <strong>sin impresión</strong> y con <strong>retiro del
+                                        producto</strong> por parte del cliente.
+                                </div>
+
+                                <!-- Confirmación condiciones generales -->
+                                <div class="question-content">
+                                    <div class="question-text">¿Es consciente de estas condiciones de compra? *</div>
+                                    <div class="options-group" style="margin-top:8px">
+                                        <label class="option-label">
+                                            <input type="radio" name="politica_condiciones" required
+                                                value="Soy consciente de estas condiciones">
+                                            <span>✅ Soy consciente de estas condiciones</span>
+                                        </label>
+                                    </div>
+                                </div>
+
+                            </div>
+                        </div>
+
+                        <!-- PAGE BREAK -->
+                        <div class="page-break" style="margin-top:40px"></div>
+
+                        <!-- DECLARACIÓN -->
+                        <div class="declaracion">
+                            <strong>Declaración del Cliente:</strong> Declaro que la información proporcionada en este
+                            formulario
+                            es verídica y completa. Me comprometo a informar oportunamente cualquier cambio en los datos
+                            aquí
+                            consignados. Entiendo que esta información será utilizada por {{ nombre_empresa }} para gestionar de
+                            manera
+                            eficiente la relación comercial, incluyendo la fabricación, despacho y facturación de
+                            productos.
+                        </div>
+
+                        <!-- INPUT OCULTO CON PDF BASE64 -->
+                        <input type="hidden" name="pdf_base64" id="pdfBase64Input">
+
+                        <!-- BOTÓN ENVIAR -->
+                        <div class="submit-area no-print" id="submitArea">
+                            <button type="submit" class="btn-submit" id="btnSubmit">✅ Enviar Formulario</button>
+                            <div id="loadingMessage"
+                                style="display:none; text-align:center; color: var(--red-primary); font-weight: 600; margin-top: 15px;">
+                                ⏳ Procesando diseño y firmando documento... por favor espera unos segundos.
+                            </div>
+                        </div>
+
+                        <!-- FOOTER -->
+                        <div class="footer" style="margin-top:24px">
+                            <strong>{{ nombre_empresa | upper }}</strong> · Fábrica de Cajas de Cartón Corrugado<br>
+                            Este documento es de uso interno y confidencial. Toda la información será tratada de forma
+                            segura y
+                            responsable.
+                        </div>
+
+                    </div><!-- /.form-body -->
+        </form>
+    </div><!-- /.container -->
+
+</body>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        // ── Auto-llenar Nº Registro ──────────────────────────────────────
+        var regInput = document.querySelector('input[name="numero_registro"]');
+        if (regInput) {
+            regInput.value = 'Cargando...';
+            regInput.style.opacity = '0.5';
+            fetch('/api/formulario-cliente/next-registro')
+                .then(function (r) { return r.json(); })
+                .then(function (data) { regInput.value = data.numero_registro || ''; regInput.style.opacity = '1'; })
+                .catch(function () { regInput.value = ''; regInput.style.opacity = '1'; });
+        }
+
+        // ── Validación condicional de campos de detalle ──────────────────
+        // Cada entrada: [nombre_radio, valor_que_activa_detalle, id_detalle]
+        var condicionales = [
+            ['enrolar_choferes', 'Sí', 'detalle_enrolar'],
+            ['app_choferes', 'Sí', 'detalle_app'],
+            ['epp_choferes', 'Sí', 'detalle_epp'],
+            ['agendamiento', 'Sí', 'detalle_agendamiento'],
+            ['rotulacion', 'Requiere tarja propia del cliente', 'detalle_rotulacion'],
+            ['acepta_pallet_estandar', 'No', 'medida_pallet_alternativa'],
+            ['factura_por_email', 'Sí', 'email_facturacion'],
+            ['facturacion_excedente', 'Constituye venta a la espera de la OC para facturar', 'detalle_excedente'],
+        ];
+
+        function actualizarRequerido(radioName, valorActivador, detalleId) {
+            var radios = document.querySelectorAll('input[name="' + radioName + '"]');
+            var detalle = document.getElementById(detalleId);
+            if (!detalle) return;
+
+            function evaluar() {
+                var seleccionado = document.querySelector('input[name="' + radioName + '"]:checked');
+                if (seleccionado && seleccionado.value === valorActivador) {
+                    detalle.required = true;
+                    detalle.style.borderColor = '';
+                } else {
+                    detalle.required = false;
+                    detalle.value = '';
+                }
+            }
+
+            radios.forEach(function (r) { r.addEventListener('change', evaluar); });
+            evaluar(); // Estado inicial
+        }
+
+        condicionales.forEach(function (c) {
+            actualizarRequerido(c[0], c[1], c[2]);
+        });
+
+        // ── Mensaje de error amigable al enviar e intercepción para HTML2PDF ──
+        document.querySelector('form').addEventListener('submit', function (e) {
+            var form = this;
+            var primerInvalido = document.querySelector(':invalid');
+            if (primerInvalido) {
+                e.preventDefault();
+                primerInvalido.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                primerInvalido.focus();
+                primerInvalido.style.borderColor = '#C41230';
+                setTimeout(function () { primerInvalido.style.borderColor = ''; }, 3000);
+            } else {
+                // Iniciar captura PDF
+                var pdfInput = document.getElementById('pdfBase64Input');
+                if (!pdfInput.value) { // Si el input está vacío, interceptamos
+                    e.preventDefault();
+
+                    var submitBtn = document.getElementById('btnSubmit');
+                    var loadingMsg = document.getElementById('loadingMessage');
+                    submitBtn.style.display = 'none';
+                    loadingMsg.style.display = 'block';
+
+                    var opt = {
+                        margin: [-5, 0, 0, 0], // Evita bordes en blanco arriba
+                        filename: 'alta_cliente.pdf',
+                        image: { type: 'jpeg', quality: 0.98 },
+                        html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                    };
+
+                    // Agregar clase al body para disparar CSS de impresión y esconder botones
+                    document.body.classList.add('generating-pdf');
+                    var element = document.querySelector('.container');
+
+                    html2pdf().set(opt).from(element).outputPdf('datauristring').then(function (pdfAsString) {
+                        document.body.classList.remove('generating-pdf');
+                        // El valor viene como "data:application/pdf;base64,JVBER..."
+                        // Extraemos la parte útil
+                        var base64data = pdfAsString.split(',')[1];
+                        pdfInput.value = base64data;
+
+                        // Recolectar datos del formulario para enviar como JSON
+                        var formData = new FormData(form);
+                        var jsonData = {};
+                        formData.forEach(function (value, key) {
+                            jsonData[key] = value;
+                        });
+                        jsonData['pdf_base64'] = base64data;
+
+                        // Enviar vía Fetch API JSON para evadir los límites de x-www-form-urlencoded
+                        fetch('/formulario-cliente', {
+                            method: 'POST',
+                            headers: {
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify(jsonData)
+                        }).then(function (response) {
+                            return response.json();
+                        }).then(function (data) {
+                            if (data.status === 'success' && data.redirect) {
+                                window.location.href = data.redirect;
+                            } else {
+                                alert("Error en el servidor al enviar el formulario.");
+                                submitBtn.style.display = 'block';
+                                loadingMsg.style.display = 'none';
+                            }
+                        }).catch(function (err) {
+                            alert("Error de conexión: " + err);
+                            submitBtn.style.display = 'block';
+                            loadingMsg.style.display = 'none';
+                        });
+
+                    }).catch(function (err) {
+                        alert("Hubo un error al compilar el visual del PDF: " + err);
+                        document.body.classList.remove('generating-pdf');
+                        submitBtn.style.display = 'block';
+                        loadingMsg.style.display = 'none';
+                    });
+                }
+            }
+        });
+    });
+</script>
+
+</html>
