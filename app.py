@@ -350,6 +350,39 @@ def api_next_registro():
         return jsonify({'success': False, 'numero_registro': fallback})
 
 
+@app.route('/test-email')
+def test_email():
+    """Endpoint de diagnostico — muestra resultado en el navegador."""
+    import requests as req
+    resultado = {
+        'api_key_set': bool(RESEND_API_KEY),
+        'api_key_preview': RESEND_API_KEY[:10] + '...' if RESEND_API_KEY else 'NO CONFIGURADA',
+        'destinatario': FORMULARIO_DESTINO,
+        'nombre_empresa': NOMBRE_EMPRESA,
+    }
+    if not RESEND_API_KEY:
+        resultado['error'] = 'RESEND_API_KEY no configurada'
+        return jsonify(resultado)
+    try:
+        response = req.post(
+            'https://api.resend.com/emails',
+            headers={'Authorization': f'Bearer {RESEND_API_KEY}', 'Content-Type': 'application/json'},
+            json={
+                'from': f'{NOMBRE_EMPRESA} <onboarding@resend.dev>',
+                'to': [FORMULARIO_DESTINO],
+                'subject': f'Test {NOMBRE_EMPRESA} desde Railway',
+                'html': '<p>Email de prueba desde el nuevo servicio Alta Clientes ✅</p>'
+            },
+            timeout=15
+        )
+        resultado['status_code'] = response.status_code
+        resultado['response'] = response.text
+        resultado['resultado'] = 'OK ✅ Email enviado!' if response.status_code in (200, 201) else 'Error ❌'
+    except Exception as e:
+        resultado['error'] = str(e)
+    return jsonify(resultado)
+
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5000))
     app.run(host='0.0.0.0', port=port, debug=True)
