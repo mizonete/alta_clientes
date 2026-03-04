@@ -89,6 +89,28 @@
 
         body.generating-pdf .section {
             overflow: visible !important;
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+
+        body.generating-pdf .question-group {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+
+        body.generating-pdf .note-box {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
+        }
+
+        body.generating-pdf .section-header {
+            page-break-after: avoid !important;
+            break-after: avoid !important;
+        }
+
+        body.generating-pdf .declaracion {
+            page-break-inside: avoid !important;
+            break-inside: avoid !important;
         }
 
         /* ============ TOP BAR ============ */
@@ -942,8 +964,8 @@
                                     <strong style="color:#C41230;font-size:10pt;">📄 Evaluación de
                                         Crédito:</strong><br><br>
                                     Para evaluar la solicitud de crédito a 30 días, es necesario enviar al correo
-                                    <strong><a href="mailto:{{ correo_destino }}"
-                                            style="color:#C41230;">{{ correo_destino }}</a></strong>
+                                    <strong><a href="mailto:{{ correo_destino }}" style="color:#C41230;">{{
+                                            correo_destino }}</a></strong>
                                     la <strong>carpeta tributaria (En el sistema de impuestos internos es la carpeta
                                         para solicitar creditos)</strong> mas el <strong>último balance de la
                                         empresa</strong>,
@@ -1044,7 +1066,8 @@
                                     Los pallets utilizados por <strong>{{ nombre_empresa }}</strong> para el despacho de
                                     productos
                                     son de
-                                    <strong>propiedad exclusiva de {{ nombre_empresa }}</strong>. En cada entrega, el cliente
+                                    <strong>propiedad exclusiva de {{ nombre_empresa }}</strong>. En cada entrega, el
+                                    cliente
                                     deberá
                                     <strong>devolver los pallets</strong> al momento de la recepción de la mercadería o
                                     en el
@@ -1114,7 +1137,8 @@
                             formulario
                             es verídica y completa. Me comprometo a informar oportunamente cualquier cambio en los datos
                             aquí
-                            consignados. Entiendo que esta información será utilizada por {{ nombre_empresa }} para gestionar de
+                            consignados. Entiendo que esta información será utilizada por {{ nombre_empresa }} para
+                            gestionar de
                             manera
                             eficiente la relación comercial, incluyendo la fabricación, despacho y facturación de
                             productos.
@@ -1219,11 +1243,12 @@
                     loadingMsg.style.display = 'block';
 
                     var opt = {
-                        margin: [-5, 0, 0, 0], // Evita bordes en blanco arriba
+                        margin: [5, 0, 5, 0],
                         filename: 'alta_cliente.pdf',
                         image: { type: 'jpeg', quality: 0.98 },
                         html2canvas: { scale: 2, useCORS: true, scrollY: 0 },
-                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                        jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                        pagebreak: { mode: ['avoid-all', 'css', 'legacy'], avoid: ['.section', '.question-group', '.note-box', '.declaracion'] }
                     };
 
                     // Agregar clase al body para disparar CSS de impresión y esconder botones
