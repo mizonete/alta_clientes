@@ -4,6 +4,7 @@ from datetime import datetime
 from flask import Flask, request, jsonify, render_template, redirect, url_for
 
 app = Flask(__name__)
+app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB para aceptar PDF base64
 
 # ── Configuracion Multi-Empresa ──────────────────────────────
 NOMBRE_EMPRESA    = os.environ.get('NOMBRE_EMPRESA', 'InfinityBox').strip()
