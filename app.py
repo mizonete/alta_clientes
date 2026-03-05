@@ -11,76 +11,162 @@ NOMBRE_EMPRESA    = os.environ.get('NOMBRE_EMPRESA', 'InfinityBox').strip()
 FORMULARIO_DESTINO = os.environ.get('FORMULARIO_DESTINO', 'cotizar@infinitybox.cl').strip().lower()
 RESEND_API_KEY     = os.environ.get('RESEND_API_KEY', '').strip()
 
-# ── Base de datos (SQLite local — sin PostgreSQL por ahora) ──
+# ── Base de datos ─────────────────────────────────────────────
+def get_db_type():
+    return 'postgres' if os.environ.get('DATABASE_URL') else 'sqlite'
+
 def get_db_connection():
-    conn = sqlite3.connect('clientes_nuevos.db')
-    conn.row_factory = sqlite3.Row
-    return conn
+    db_url = os.environ.get('DATABASE_URL')
+    if db_url:
+        import psycopg2
+        from urllib.parse import urlparse
+        result = urlparse(db_url)
+        conn = psycopg2.connect(
+            database=result.path[1:],
+            user=result.username,
+            password=result.password,
+            host=result.hostname,
+            port=result.port,
+            sslmode='require' if result.hostname != 'localhost' else 'disable'
+        )
+        return conn
+    else:
+        conn = sqlite3.connect('clientes_nuevos.db')
+        conn.row_factory = sqlite3.Row
+        return conn
+
+def get_cursor(conn):
+    if get_db_type() == 'postgres':
+        import psycopg2.extras
+        return conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    else:
+        return conn.cursor()
 
 def _init_clientes_nuevos_table():
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
-        cursor.execute("""
-            CREATE TABLE IF NOT EXISTS clientes_nuevos (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                ejecutivo TEXT,
-                numero_registro TEXT,
-                razon_social TEXT,
-                rut TEXT,
-                giro TEXT,
-                direccion_legal TEXT,
-                direccion_despacho TEXT,
-                horario_recepcion TEXT,
-                enrolar_choferes TEXT,
-                detalle_enrolar TEXT,
-                app_choferes TEXT,
-                detalle_app TEXT,
-                epp_choferes TEXT,
-                detalle_epp TEXT,
-                tipo_camion TEXT,
-                agendamiento TEXT,
-                detalle_agendamiento TEXT,
-                contacto_bodega_nombre TEXT,
-                contacto_bodega_tel TEXT,
-                contacto_bodega_email TEXT,
-                metodo_descarga TEXT,
-                obs_descarga TEXT,
-                altura_pallet TEXT,
-                acepta_pallet_estandar TEXT,
-                medida_pallet_alternativa TEXT,
-                cajas_paradas TEXT,
-                rotulacion TEXT,
-                detalle_rotulacion TEXT,
-                tolerancia TEXT,
-                facturacion_excedente TEXT,
-                obs_facturacion TEXT,
-                contacto_cobranza_nombre TEXT,
-                contacto_cobranza_cargo TEXT,
-                contacto_cobranza_tel TEXT,
-                contacto_cobranza_email TEXT,
-                fechas_pago TEXT,
-                portal_pago TEXT,
-                detalle_portal TEXT,
-                guia_con_factura TEXT,
-                email_facturacion TEXT,
-                condicion_pago TEXT,
-                etiqueta_caja TEXT,
-                detalle_etiqueta TEXT,
-                contacto_compras_nombre TEXT,
-                contacto_compras_cargo TEXT,
-                contacto_compras_tel TEXT,
-                contacto_compras_email TEXT,
-                politica_pallets TEXT,
-                politica_condiciones TEXT,
-                conocimiento_credito TEXT,
-                obs_generales TEXT
-            )
-        """)
+        cursor = get_cursor(conn)
+        db_type = get_db_type()
+
+        if db_type == 'postgres':
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS clientes_nuevos (
+                    id SERIAL PRIMARY KEY,
+                    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    ejecutivo TEXT,
+                    numero_registro TEXT,
+                    razon_social TEXT,
+                    rut TEXT,
+                    giro TEXT,
+                    direccion_legal TEXT,
+                    direccion_despacho TEXT,
+                    horario_recepcion TEXT,
+                    enrolar_choferes TEXT,
+                    detalle_enrolar TEXT,
+                    app_choferes TEXT,
+                    detalle_app TEXT,
+                    epp_choferes TEXT,
+                    detalle_epp TEXT,
+                    tipo_camion TEXT,
+                    agendamiento TEXT,
+                    detalle_agendamiento TEXT,
+                    contacto_bodega_nombre TEXT,
+                    contacto_bodega_tel TEXT,
+                    contacto_bodega_email TEXT,
+                    metodo_descarga TEXT,
+                    obs_descarga TEXT,
+                    altura_pallet TEXT,
+                    acepta_pallet_estandar TEXT,
+                    medida_pallet_alternativa TEXT,
+                    cajas_paradas TEXT,
+                    rotulacion TEXT,
+                    detalle_rotulacion TEXT,
+                    tolerancia TEXT,
+                    facturacion_excedente TEXT,
+                    obs_facturacion TEXT,
+                    contacto_cobranza_nombre TEXT,
+                    contacto_cobranza_cargo TEXT,
+                    contacto_cobranza_tel TEXT,
+                    contacto_cobranza_email TEXT,
+                    fechas_pago TEXT,
+                    portal_pago TEXT,
+                    detalle_portal TEXT,
+                    guia_con_factura TEXT,
+                    email_facturacion TEXT,
+                    condicion_pago TEXT,
+                    etiqueta_caja TEXT,
+                    detalle_etiqueta TEXT,
+                    contacto_compras_nombre TEXT,
+                    contacto_compras_cargo TEXT,
+                    contacto_compras_tel TEXT,
+                    contacto_compras_email TEXT,
+                    politica_pallets TEXT,
+                    politica_condiciones TEXT,
+                    conocimiento_credito TEXT,
+                    obs_generales TEXT
+                )
+            """)
+        else:
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS clientes_nuevos (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                    ejecutivo TEXT,
+                    numero_registro TEXT,
+                    razon_social TEXT,
+                    rut TEXT,
+                    giro TEXT,
+                    direccion_legal TEXT,
+                    direccion_despacho TEXT,
+                    horario_recepcion TEXT,
+                    enrolar_choferes TEXT,
+                    detalle_enrolar TEXT,
+                    app_choferes TEXT,
+                    detalle_app TEXT,
+                    epp_choferes TEXT,
+                    detalle_epp TEXT,
+                    tipo_camion TEXT,
+                    agendamiento TEXT,
+                    detalle_agendamiento TEXT,
+                    contacto_bodega_nombre TEXT,
+                    contacto_bodega_tel TEXT,
+                    contacto_bodega_email TEXT,
+                    metodo_descarga TEXT,
+                    obs_descarga TEXT,
+                    altura_pallet TEXT,
+                    acepta_pallet_estandar TEXT,
+                    medida_pallet_alternativa TEXT,
+                    cajas_paradas TEXT,
+                    rotulacion TEXT,
+                    detalle_rotulacion TEXT,
+                    tolerancia TEXT,
+                    facturacion_excedente TEXT,
+                    obs_facturacion TEXT,
+                    contacto_cobranza_nombre TEXT,
+                    contacto_cobranza_cargo TEXT,
+                    contacto_cobranza_tel TEXT,
+                    contacto_cobranza_email TEXT,
+                    fechas_pago TEXT,
+                    portal_pago TEXT,
+                    detalle_portal TEXT,
+                    guia_con_factura TEXT,
+                    email_facturacion TEXT,
+                    condicion_pago TEXT,
+                    etiqueta_caja TEXT,
+                    detalle_etiqueta TEXT,
+                    contacto_compras_nombre TEXT,
+                    contacto_compras_cargo TEXT,
+                    contacto_compras_tel TEXT,
+                    contacto_compras_email TEXT,
+                    politica_pallets TEXT,
+                    politica_condiciones TEXT,
+                    conocimiento_credito TEXT,
+                    obs_generales TEXT
+                )
+            """)
         conn.commit()
         conn.close()
-        print("[alta_clientes] Tabla clientes_nuevos lista.")
+        print(f"[alta_clientes] Tabla clientes_nuevos lista ({db_type}).")
     except Exception as e:
         print(f"[alta_clientes] Error al crear tabla clientes_nuevos: {e}")
 
@@ -287,10 +373,11 @@ def formulario_cliente():
     # Guardar en BD
     try:
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
         fields = list(datos.keys())
         values = list(datos.values())
-        placeholders = ', '.join(['?'] * len(fields))
+        ph = '%s' if get_db_type() == 'postgres' else '?'
+        placeholders = ', '.join([ph] * len(fields))
         col_names = ', '.join(fields)
         query = f"INSERT INTO clientes_nuevos ({col_names}) VALUES ({placeholders})"
         cursor.execute(query, values)
@@ -322,10 +409,12 @@ def api_next_registro():
         from datetime import date
         anio_actual = date.today().year
         conn = get_db_connection()
-        cursor = conn.cursor()
+        cursor = get_cursor(conn)
+
+        ph = '%s' if get_db_type() == 'postgres' else '?'
         cursor.execute(
-            "SELECT numero_registro FROM clientes_nuevos "
-            "WHERE numero_registro LIKE ? ORDER BY id DESC LIMIT 1",
+            f"SELECT numero_registro FROM clientes_nuevos "
+            f"WHERE numero_registro LIKE {ph} ORDER BY id DESC LIMIT 1",
             (f"{anio_actual}-%",)
         )
         row = cursor.fetchone()
@@ -359,6 +448,7 @@ def test_email():
         'api_key_preview': RESEND_API_KEY[:10] + '...' if RESEND_API_KEY else 'NO CONFIGURADA',
         'destinatario': FORMULARIO_DESTINO,
         'nombre_empresa': NOMBRE_EMPRESA,
+        'db_type': get_db_type(),
     }
     if not RESEND_API_KEY:
         resultado['error'] = 'RESEND_API_KEY no configurada'
