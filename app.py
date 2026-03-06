@@ -13,10 +13,10 @@ RESEND_API_KEY     = os.environ.get('RESEND_API_KEY', '').strip()
 
 # ── Base de datos ─────────────────────────────────────────────
 def get_db_type():
-    return 'postgres' if os.environ.get('DATABASE_URL') else 'sqlite'
+    return 'postgres' if os.environ.get('DATABASE_URL', '').strip() else 'sqlite'
 
 def get_db_connection():
-    db_url = os.environ.get('DATABASE_URL')
+    db_url = os.environ.get('DATABASE_URL', '').strip()
     if db_url:
         import psycopg
         conn = psycopg.connect(db_url)
