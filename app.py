@@ -49,8 +49,37 @@ def _init_clientes_nuevos_table():
         db_type = get_db_type()
 
         if db_type == 'postgres':
-            # Migración: eliminar tabla vieja con columnas faltantes
-            cursor.execute("DROP TABLE IF EXISTS clientes_nuevos")
+            # Migración: agregar columnas que pueden faltar en tablas existentes
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS clientes_nuevos (
+                    id SERIAL PRIMARY KEY,
+                    fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+                )
+            """)
+            # Agregar todas las columnas necesarias (ignora si ya existen)
+            columnas_requeridas = [
+                'ejecutivo', 'numero_registro', 'responsable_formulario', 'razon_social',
+                'rut', 'giro', 'direccion_legal', 'direccion_despacho', 'horario_recepcion',
+                'enrolar_choferes', 'detalle_enrolar', 'app_choferes', 'detalle_app',
+                'epp_choferes', 'detalle_epp', 'tipo_camion', 'agendamiento',
+                'detalle_agendamiento', 'contacto_bodega_nombre', 'contacto_bodega_tel',
+                'contacto_bodega_email', 'metodo_descarga', 'obs_descarga', 'altura_pallet',
+                'acepta_pallet_estandar', 'medida_pallet_alternativa', 'cajas_paradas',
+                'rotulacion', 'detalle_rotulacion', 'tolerancia', 'facturacion_excedente',
+                'detalle_excedente', 'obs_facturacion', 'contacto_cobranza_nombre',
+                'contacto_cobranza_cargo', 'contacto_cobranza_tel', 'contacto_cobranza_email',
+                'fechas_pago', 'portal_pago', 'detalle_portal', 'guia_con_factura',
+                'email_facturacion', 'condicion_pago', 'etiqueta_caja', 'detalle_etiqueta',
+                'contacto_compras_nombre', 'contacto_compras_cargo', 'contacto_compras_tel',
+                'contacto_compras_email', 'politica_pallets', 'politica_condiciones',
+                'conocimiento_credito', 'obs_generales'
+            ]
+            for col in columnas_requeridas:
+                try:
+                    cursor.execute(f"ALTER TABLE clientes_nuevos ADD COLUMN {col} TEXT")
+                except Exception:
+                    conn.rollback()  # Ignora error si columna ya existe
+            conn.commit()
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS clientes_nuevos (
                     id SERIAL PRIMARY KEY,
@@ -426,11 +455,15 @@ def api_next_registro():
         row = cursor.fetchone()
         conn.close()
 
-        if row and row['numero_registro']:
-            partes = row['numero_registro'].split('-')
-            try:
-                siguiente = int(partes[-1]) + 1
-            except ValueError:
+        if row:
+            nr = row['numero_registro'] if isinstance(row, dict) else row[0]
+            if nr:
+                partes = nr.split('-')
+                try:
+                    siguiente = int(partes[-1]) + 1
+                except ValueError:
+                    siguiente = 1
+            else:
                 siguiente = 1
         else:
             siguiente = 1
@@ -442,7 +475,7 @@ def api_next_registro():
         print(f"[alta_clientes] Error generando next-registro: {e}")
         from datetime import date
         fallback = f"{date.today().year}-001"
-        return jsonify({'success': False, 'numero_registro': fallback})
+        return jsonify({'success': False, 'numero_registro': fallback, 'error': str(e)})
 
 
 @app.route('/test-email')
