@@ -18,17 +18,8 @@ def get_db_type():
 def get_db_connection():
     db_url = os.environ.get('DATABASE_URL')
     if db_url:
-        import psycopg2
-        from urllib.parse import urlparse
-        result = urlparse(db_url)
-        conn = psycopg2.connect(
-            database=result.path[1:],
-            user=result.username,
-            password=result.password,
-            host=result.hostname,
-            port=result.port,
-            sslmode='require' if result.hostname != 'localhost' else 'disable'
-        )
+        import psycopg
+        conn = psycopg.connect(db_url)
         return conn
     else:
         conn = sqlite3.connect('clientes_nuevos.db')
@@ -37,8 +28,8 @@ def get_db_connection():
 
 def get_cursor(conn):
     if get_db_type() == 'postgres':
-        import psycopg2.extras
-        return conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+        import psycopg.rows
+        return conn.cursor(row_factory=psycopg.rows.dict_row)
     else:
         return conn.cursor()
 
