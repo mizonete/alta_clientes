@@ -49,12 +49,15 @@ def _init_clientes_nuevos_table():
         db_type = get_db_type()
 
         if db_type == 'postgres':
+            # Migración: eliminar tabla vieja con columnas faltantes
+            cursor.execute("DROP TABLE IF EXISTS clientes_nuevos")
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS clientes_nuevos (
                     id SERIAL PRIMARY KEY,
                     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     ejecutivo TEXT,
                     numero_registro TEXT,
+                    responsable_formulario TEXT,
                     razon_social TEXT,
                     rut TEXT,
                     giro TEXT,
@@ -83,6 +86,7 @@ def _init_clientes_nuevos_table():
                     detalle_rotulacion TEXT,
                     tolerancia TEXT,
                     facturacion_excedente TEXT,
+                    detalle_excedente TEXT,
                     obs_facturacion TEXT,
                     contacto_cobranza_nombre TEXT,
                     contacto_cobranza_cargo TEXT,
@@ -113,6 +117,7 @@ def _init_clientes_nuevos_table():
                     fecha_registro TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     ejecutivo TEXT,
                     numero_registro TEXT,
+                    responsable_formulario TEXT,
                     razon_social TEXT,
                     rut TEXT,
                     giro TEXT,
@@ -141,6 +146,7 @@ def _init_clientes_nuevos_table():
                     detalle_rotulacion TEXT,
                     tolerancia TEXT,
                     facturacion_excedente TEXT,
+                    detalle_excedente TEXT,
                     obs_facturacion TEXT,
                     contacto_cobranza_nombre TEXT,
                     contacto_cobranza_cargo TEXT,
