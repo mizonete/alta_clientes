@@ -11,8 +11,8 @@ Este proyecto (`alta_clientes`) se encuentra desplegado en dos instancias (aplic
 - **Correo de destino (FORMULARIO_DESTINO):** `ventas@infinitybox.cl`
 
 ### 3. Infinity Vendedor Externo (Nuevo)
-- **Link del formulario:** *(Se generará al desplegar en Railway)*
-- **Correo de destino (FORMULARIO_DESTINO):** `[CORREO_A_DEFINIR]` (Ej: vendedor@infinitybox.cl)
+- **Link del formulario:** [https://web-production-410d8.up.railway.app/formulario-cliente](https://web-production-410d8.up.railway.app/formulario-cliente)
+- **Correo de destino (FORMULARIO_DESTINO):** `jcruz@infinitybox.cl`
 
 ---
-*Nota: Para que todas las instancias compartan el mismo correlativo de **N° de Registro**, asegúrate de que todas apunten a la misma `DATABASE_URL` en Railway.*
+*Nota sobre Base de Datos: Actualmente cada instancia se maneja como un proyecto 100% independiente en Railway. Cada una tiene su propio servicio de PostgreSQL conectado (`DATABASE_URL`), lo que significa que cada formulario lleva su propia secuencia de "N° de Registro" empezando desde el 2026-001.*

@@ -407,11 +407,17 @@ def formulario_cliente():
         placeholders = ', '.join([ph] * len(fields))
         col_names = ', '.join(fields)
         query = f"INSERT INTO clientes_nuevos ({col_names}) VALUES ({placeholders})"
+        
+        print(f"[alta_clientes] Intentando guardar registro {datos.get('numero_registro')}...")
         cursor.execute(query, values)
         conn.commit()
         conn.close()
+        print("[alta_clientes] Registro guardado exitosamente en la BD.")
     except Exception as e:
-        print(f"[alta_clientes] Error al guardar en BD: {e}")
+        print(f"[alta_clientes] ERROR CRÍTICO al guardar en BD: {e}")
+        # Si hay error en Postgres, es bueno hacer un rollback
+        try: conn.rollback(); conn.close()
+        except: pass
 
     # Enviar email
     datos['pdf_base64'] = f.get('pdf_base64', '')
