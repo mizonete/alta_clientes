@@ -8,6 +8,7 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16 MB para aceptar PDF ba
 
 # ── Configuracion Multi-Empresa ──────────────────────────────
 NOMBRE_EMPRESA    = os.environ.get('NOMBRE_EMPRESA', 'InfinityBox').strip()
+NOMBRE_VISUAL     = os.environ.get('NOMBRE_VISUAL', 'InfinityBox').strip()
 FORMULARIO_DESTINO = os.environ.get('FORMULARIO_DESTINO', 'cotizar@infinitybox.cl').strip().lower()
 RESEND_API_KEY     = os.environ.get('RESEND_API_KEY', '').strip()
 
@@ -367,7 +368,7 @@ def index():
 def formulario_cliente():
     if request.method == 'GET':
         return render_template('formulario_cliente.html',
-                               nombre_empresa=NOMBRE_EMPRESA,
+                               nombre_empresa=NOMBRE_VISUAL,
                                correo_destino=FORMULARIO_DESTINO)
 
     # POST: guardar datos
