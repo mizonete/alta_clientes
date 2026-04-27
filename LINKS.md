@@ -10,5 +10,9 @@ Este proyecto (`alta_clientes`) se encuentra desplegado en dos instancias (aplic
 - **Link del formulario:** [https://web-production-f234d.up.railway.app/formulario-cliente](https://web-production-f234d.up.railway.app/formulario-cliente)
 - **Correo de destino (FORMULARIO_DESTINO):** `ventas@infinitybox.cl`
 
+### 3. Infinity Vendedor Externo (Nuevo)
+- **Link del formulario:** *(Se generará al desplegar en Railway)*
+- **Correo de destino (FORMULARIO_DESTINO):** `[CORREO_A_DEFINIR]` (Ej: vendedor@infinitybox.cl)
+
 ---
-*Nota: Cualquier cambio que se realice en el código fuente de este proyecto (como en `templates/formulario_cliente.html`) y se suba a ambas instancias de Railway afectará a los dos formularios mencionados arriba.*
+*Nota: Para que todas las instancias compartan el mismo correlativo de **N° de Registro**, asegúrate de que todas apunten a la misma `DATABASE_URL` en Railway.*
